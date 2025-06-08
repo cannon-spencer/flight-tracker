@@ -111,23 +111,35 @@ $$
 
 ```mermaid
 flowchart LR
-    Fetch["Python Fetch Script<br>OpenSky REST API"]
-    UART4["UART4<br>115 kbaud"]
-    FIFO0["DATA_FIFO<br>Lock‑free"]
-    Parse["Process_New_Aircraft_Thread"]
-    Burst["Update_Current_Aircrafts_Thread"]
-    Project["recalculate_screen_positions()"]
-    Display["Display_Aircrafts_Thread"]
-    Info["Display_Aircraft_Info_Thread"]
-    Input["GPIO ISRs<br>Joystick + Buttons"]
-    Select["Select_Aircraft_Thread"]
+    %% ── Core data-path threads ─────────────────────────────
+    Parser["Process_New_Aircraft_Thread<br/><small>packet parser</small>"]:::core
+    Swap["Update_Current_AirCRAFTs_Thread<br/><small>burst swap</small>"]:::core
+    Reproj["recalculate_screen_positions<br/><small>helper fn</small>"]:::core
+    Render["Display_Aircrafts_Thread<br/><small>radar renderer</small>"]:::core
 
-    Fetch --> UART4
-    UART4 --> FIFO0
-    FIFO0 --> Parse --> Burst --> Project --> Display
-    Burst --> Info
-    Input --> Select --> Display
+    Parser --> Swap --> Reproj --> Render
+
+    %% ── UI & overlay threads ───────────────────────────────
+    Select["Select_AirCRAFT_Thread"]:::ui
+    Info["Display_AirCRAFT_Info_Thread"]:::ui
+    Range["Update_Search_Range"]:::ui
+
+    Select --> Render
     Select --> Info
+    Range  --> Reproj
+
+    %% ── Misc ───────────────────────────────────────────────
+    Idle["Idle_Thread"]:::idle
+
+    %% ── Styling ────────────────────────────────────────────
+    classDef core fill:#f3f0ff,stroke:#4d4d4d,stroke-width:1px;
+    classDef ui   fill:#f7f7f7,stroke:#4d4d4d,stroke-width:1px;
+    classDef idle fill:#ffffff,stroke:#bfbfbf,stroke-dasharray:4 4;
+
+    class Parser,Swap,Reproj,Render core;
+    class Select,Info,Range ui;
+    class Idle idle;
+
 ```
 
 ## System Diagram
