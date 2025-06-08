@@ -41,7 +41,7 @@ User interaction is handled with a 2‑axis analogue joystick and four buttons w
 
 $$
 \begin{aligned}
-\Delta\varphi &= \varphi_{\text{ac}} - \varphi_0 \\[4pt]
+\Delta\varphi &= \varphi_{\text{ac}} - \varphi_0 \\\\
 \Delta\lambda &= \lambda_{\text{ac}} - \lambda_0
 \end{aligned}
 $$
@@ -50,14 +50,14 @@ $$
 
 $$
 \begin{aligned}
-k_{\varphi} &= 111.32\;\text{km/°} \\[4pt]
-k_{\lambda} &= 111.32\;\cos\varphi_0\;\text{km/°}
+k_{\varphi} &= 111.32\,\text{km/°} \\\\
+k_{\lambda} &= 111.32\,\cos\varphi_0\,\text{km/°}
 \end{aligned}
 $$
 
 $$
 \begin{aligned}
-\Delta y_{\text{km}} &= \Delta\varphi\,k_{\varphi} \\[4pt]
+\Delta y_{\text{km}} &= \Delta\varphi\,k_{\varphi} \\\\
 \Delta x_{\text{km}} &= \Delta\lambda\,k_{\lambda}
 \end{aligned}
 $$
@@ -74,7 +74,7 @@ $$
 Outer ring radius \(R_{\max}\) maps to 100 px:
 
 $$
-s = \frac{100\;\text{px}}{R_{\max}},\qquad
+s = \frac{100\,\text{px}}{R_{\max}},\qquad
 x = x_0 + s\,D\,\cos\theta,\qquad
 y = y_0 - s\,D\,\sin\theta
 $$
@@ -85,70 +85,26 @@ A constant-length track cue (\(\ell = 30\;\text{px}\)) is drawn using the aircra
 
 $$
 \begin{aligned}
-x_{\text{end}} &= x + \ell\,\cos\!\bigl(90^{\circ} - \psi\bigr) \\[4pt]
+x_{\text{end}} &= x + \ell\,\cos\!\bigl(90^{\circ} - \psi\bigr) \\\\
 y_{\text{end}} &= y + \ell\,\sin\!\bigl(90^{\circ} - \psi\bigr)
 \end{aligned}
 $$
 
 
-The firmware translates geodetic positions into on‑screen pixels in four deterministic steps, keeping the maths entirely in **single‑precision** to respect the MCU’s FPU latency budget.
+### Thread / ISR Timelines
 
-### 1  Angular deltas
-
-$$
-\begin{aligned}
-\Delta\varphi &= \varphi_{\text{ac}} - \varphi_0\\[2pt]
-\Delta\lambda &= \lambda_{\text{ac}} - \lambda_0
-\end{aligned}
-$$
-
-### 2  Convert to kilometres (local tangent plane)
-
-$$
-\begin{aligned}
- k_{\varphi} &= 111.32\;\text{km/°}\\[2pt]
- k_{\lambda} &= 111.32\;\cos\varphi_0\;\text{km/°}
-\end{aligned}
-$$
-
-$$
-\begin{aligned}
- \Delta y_{\text{km}} &= \Delta\varphi\,k_{\varphi}\\[2pt]
- \Delta x_{\text{km}} &= \Delta\lambda\,k_{\lambda}
-\end{aligned}
-$$
-
-### 3  Range & bearing
-
-$$
-D = \sqrt{\Delta x_{\text{km}}^{2} + \Delta y_{\text{km}}^{2}},\qquad
-\theta = \operatorname{atan2}(\Delta y_{\text{km}},\;\Delta x_{\text{km}})
-$$
-
-### 4  Scale to pixels
-
-Outer ring radius $R_{\max}$ is mapped to 100 px:
-
-$$
- s = \frac{100\,\text{px}}{R_{\max}},\qquad
- \begin{aligned}
-  x &= x_0 + s\,D\,\cos\theta\\[2pt]
-  y &= y_0 - s\,D\,\sin\theta
- \end{aligned}
-$$
-
-### Track vector (dotted heading line)
-
-A constant‑length track cue ($\ell = 30\,\text{px}$) is drawn using the aircraft’s true track $\psi$:
-
-$$
-\begin{aligned}
- x_{\text{end}} &= x + \ell\,\cos(90^{\circ}-\psi)\\[2pt]
- y_{\text{end}} &= y + \ell\,\sin(90^{\circ}-\psi)
-\end{aligned}
-$$
+| Priority  | Context                           | Purpose                          |
+| --------- | --------------------------------- | -------------------------------- |
+| **0 – 2** | ISRs                              | UART4, GPIO → semaphore kick     |
+| 1         | `Process_New_Aircraft_Thread`     | Parse packet into staging buffer |
+| 2         | `Update_Current_Aircrafts_Thread` | Burst swap + reprojection        |
+| 10        | `Select_Aircraft_Thread`          | Joystick vector → target         |
+| 11        | `Display_Aircrafts_Thread`        | Radar redraw                     |
+| 13        | `Display_Aircraft_Info_Thread`    | Info overlay                     |
+| 255       | `Idle_Thread`                     | `WFI` sleep                      |
 
 ---
+
 
 ## Architecture Diagram
 
@@ -172,20 +128,6 @@ flowchart LR
     Input --> Select --> Display
     Select --> Info
 ```
-
-### Thread / ISR Timelines
-
-| Priority  | Context                           | Purpose                          |
-| --------- | --------------------------------- | -------------------------------- |
-| **0 – 2** | ISRs                              | UART4, GPIO → semaphore kick     |
-| 1         | `Process_New_Aircraft_Thread`     | Parse packet into staging buffer |
-| 2         | `Update_Current_Aircrafts_Thread` | Burst swap + reprojection        |
-| 10        | `Select_Aircraft_Thread`          | Joystick vector → target         |
-| 11        | `Display_Aircrafts_Thread`        | Radar redraw                     |
-| 13        | `Display_Aircraft_Info_Thread`    | Info overlay                     |
-| 255       | `Idle_Thread`                     | `WFI` sleep                      |
-
----
 
 ## System Diagram
 
