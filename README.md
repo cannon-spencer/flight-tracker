@@ -90,6 +90,7 @@ y_{\text{end}} &= y + \ell\,\sin\!\bigl(90^{\circ} - \psi\bigr)
 \end{aligned}
 $$
 
+---
 
 ### Thread / ISR Timelines
 
