@@ -1,4 +1,4 @@
-# Aircraft Display System (ADS)
+# RTOS Flight Tracker
 
 Real‑time embedded radar that visualises live aircraft traffic on a **TM4C123G LaunchPad** driving a **240 × 320 ST7789 TFT**. Telemetry is streamed from the OpenSky Network over UART; a lightweight **G8RTOS** micro‑kernel orchestrates deterministic rendering, user input and data processing.
 
@@ -6,7 +6,7 @@ Real‑time embedded radar that visualises live aircraft traffic on a **TM4C123G
 
 ## Introduction
 
-ADS turns a hobby‑class micro‑controller into a self‑contained **mini‑radar**. A Python script running on a BeagleBone Black (or any Linux host) periodically queries the OpenSky REST API, packs each aircraft’s state vector into a fixed‑width binary frame and streams it out over **UART4 @ 115 200 baud**.
+This project turns a micro‑controller into a self‑contained **mini‑radar**. A Python script running on a BeagleBone Black (or any Linux host) periodically queries the OpenSky REST API, packs each aircraft’s state vector into a fixed‑width binary frame and streams it out over **UART4 @ 115 200 baud**.
 On the LaunchPad, an ISR decodes the stream into a FIFO; real‑time threads perform coordinate reprojection and render range rings, track vectors and call‑signs.
 User interaction is handled with a 2‑axis analogue joystick and four buttons wired through a PCA9555 I/O expander.
 
@@ -35,7 +35,61 @@ User interaction is handled with a 2‑axis analogue joystick and four buttons w
 
 ---
 
-## How Distance & Heading Are Computed
+## How Distance & Heading Are Computed
+
+### 1 Angular deltas
+
+$$
+\begin{aligned}
+\Delta\varphi &= \varphi_{\text{ac}} - \varphi_0 \\[4pt]
+\Delta\lambda &= \lambda_{\text{ac}} - \lambda_0
+\end{aligned}
+$$
+
+### 2 Convert to kilometres (local tangent plane)
+
+$$
+\begin{aligned}
+k_{\varphi} &= 111.32\;\text{km/°} \\[4pt]
+k_{\lambda} &= 111.32\;\cos\varphi_0\;\text{km/°}
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+\Delta y_{\text{km}} &= \Delta\varphi\,k_{\varphi} \\[4pt]
+\Delta x_{\text{km}} &= \Delta\lambda\,k_{\lambda}
+\end{aligned}
+$$
+
+### 3 Range & bearing
+
+$$
+D = \sqrt{\Delta x_{\text{km}}^{2} + \Delta y_{\text{km}}^{2}},\qquad
+\theta = \mathrm{atan2}\!\bigl(\Delta y_{\text{km}},\,\Delta x_{\text{km}}\bigr)
+$$
+
+### 4 Scale to pixels
+
+Outer ring radius \(R_{\max}\) maps to 100 px:
+
+$$
+s = \frac{100\;\text{px}}{R_{\max}},\qquad
+x = x_0 + s\,D\,\cos\theta,\qquad
+y = y_0 - s\,D\,\sin\theta
+$$
+
+### Track vector (dotted heading line)
+
+A constant-length track cue (\(\ell = 30\;\text{px}\)) is drawn using the aircraft’s true track \(\psi\):
+
+$$
+\begin{aligned}
+x_{\text{end}} &= x + \ell\,\cos\!\bigl(90^{\circ} - \psi\bigr) \\[4pt]
+y_{\text{end}} &= y + \ell\,\sin\!\bigl(90^{\circ} - \psi\bigr)
+\end{aligned}
+$$
+
 
 The firmware translates geodetic positions into on‑screen pixels in four deterministic steps, keeping the maths entirely in **single‑precision** to respect the MCU’s FPU latency budget.
 
@@ -216,4 +270,3 @@ Released under the **MIT License** – see [`LICENSE`](LICENSE) for full text.
 ---
 
 > *Cannon Spencer · University of Florida · November 2024*
-
