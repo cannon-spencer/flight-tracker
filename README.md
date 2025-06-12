@@ -30,7 +30,7 @@ User interaction is handled with a 2‑axis analogue joystick and four buttons w
 
 ## Demo Video
 
-[![Watch the demo](https://img.youtube.com/vi/8I4uy4flCvI/hqdefault.jpg
+[![Watch the demo](https://i.imgur.com/ibffxp8.png
 )](https://youtu.be/8I4uy4flCvI)
 
 ---
