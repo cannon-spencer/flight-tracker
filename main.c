@@ -9,7 +9,7 @@
  * @date        November 10, 2024
  * @university  University of Florida
  *
- * @version     1.0.0
+ * @version     1.0.1
  *
  * @details
  * This file is part of the Final Project: Aircraft Display System. The goal of this project
@@ -56,10 +56,10 @@ int main(void){
     G8RTOS_AddThread(Idle_Thread, 255, "Idle");
     G8RTOS_AddThread(Process_New_Aircraft_Thread, 1, "Process_New_Aircraft_Thread");
     G8RTOS_AddThread(Update_Current_Aircrafts_Thread, 2, "Update_Current_Aircrafts_Thread");
-    G8RTOS_AddThread(Update_Search_Range, 12, "Update_Search_Range");
-    G8RTOS_AddThread(Display_Aircraft_Info_Thread, 13, "Display_Aircraft_Info_Thread");
-    G8RTOS_AddThread(Display_Aircrafts_Thread, 11, "Display_Aircrafts_Thread");
-    G8RTOS_AddThread(Select_Aircraft_Thread, 10, "Select_Aircraft_Thread");
+    G8RTOS_AddThread(Update_Search_Range, 5, "Update_Search_Range");
+    G8RTOS_AddThread(Display_Aircraft_Info_Thread, 6, "Display_Aircraft_Info_Thread");
+    G8RTOS_AddThread(Display_Aircrafts_Thread, 4, "Display_Aircrafts_Thread");
+    G8RTOS_AddThread(Select_Aircraft_Thread, 3, "Select_Aircraft_Thread");
 
 
     // Add FIFOs
