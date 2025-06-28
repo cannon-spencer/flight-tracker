@@ -1,12 +1,12 @@
 # RTOS Flight Tracker
 
-Real‑time embedded radar that visualises live aircraft traffic on a **TM4C123G LaunchPad** driving a **240 × 320 ST7789 TFT**. Telemetry is streamed from the OpenSky Network over UART; a lightweight **G8RTOS** micro‑kernel orchestrates deterministic rendering, user input and data processing.
+Real‑time embedded radar that visualises live aircraft traffic on a **TM4C123G LaunchPad** driving a **240 × 320 ST7789 Display**. Telemetry is streamed from the OpenSky Network over UART; a lightweight **G8RTOS** micro‑kernel orchestrates deterministic rendering, user input and data processing.
 
 ---
 
 ## Introduction
 
-This project turns a micro‑controller into a self‑contained **mini‑radar**. A Python script running on a BeagleBone Black (or any Linux host) periodically queries the OpenSky REST API, packs each aircraft’s state vector into a fixed‑width binary frame and streams it out over **UART4 @ 115 200 baud**.
+This project turns a micro‑controller into a self‑contained **mini‑radar**. A Python script running on a BeagleBone Black (or any Linux host) periodically queries the OpenSky REST API, packs each aircraft’s state vector into a fixed‑width binary frame and streams it out over **UART @ 115,200 baud**.
 On the LaunchPad, an ISR decodes the stream into a FIFO; real‑time threads perform coordinate reprojection and render range rings, track vectors and call‑signs.
 User interaction is handled with a 2‑axis analogue joystick and four buttons wired through a PCA9555 I/O expander.
 
